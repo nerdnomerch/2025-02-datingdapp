@@ -6,6 +6,6 @@ libs = ["lib"]
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 
 remapping = [
-    "/lib/openzeppelin-contracts/=@openzeppelin/",
-    "/lib/forge-std/src/=@forge-std/",
+    "@openzeppelin//lib/openzeppelin-contracts/",
+    "forge-std/=/lib/forge-std/src/",
 ]
