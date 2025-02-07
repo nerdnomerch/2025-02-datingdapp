@@ -72,7 +72,7 @@ contract MultiSigWallet {
         require(txn.approvedByOwner1 && txn.approvedByOwner2, "Not enough approvals");
 
         txn.executed = true;
-        (bool success, ) = payable(txn.to).call{value: txn.value}("");
+        (bool success,) = payable(txn.to).call{value: txn.value}("");
         require(success, "Transaction failed");
 
         emit TransactionExecuted(_txId, txn.to, txn.value);

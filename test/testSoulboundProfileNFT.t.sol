@@ -32,7 +32,6 @@ contract SoulboundProfileNFTTest is Test {
         vm.prank(user);
         vm.expectRevert("Profile already exists");
         soulboundNFT.mintProfile("Alice", 25, "ipfs://profileImage");
-
     }
 
     function testTokenURI() public {

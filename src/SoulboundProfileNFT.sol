@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-
 contract SoulboundProfileNFT is ERC721, Ownable {
     error ERC721Metadata__URI_QueryFor_NonExistentToken();
     error SoulboundTokenCannotBeTransferred();
@@ -54,7 +53,7 @@ contract SoulboundProfileNFT is ERC721, Ownable {
         emit ProfileBurned(msg.sender, tokenId);
     }
 
-    /// @notice App owner can block users 
+    /// @notice App owner can block users
     function blockProfile(address blockAddress) external onlyOwner {
         uint256 tokenId = profileToToken[blockAddress];
         require(tokenId != 0, "No profile found");
@@ -67,12 +66,12 @@ contract SoulboundProfileNFT is ERC721, Ownable {
     }
 
     /// @notice Override of transferFrom to prevent any transfer.
-    function transferFrom(address, address, uint256) public pure override{
+    function transferFrom(address, address, uint256) public pure override {
         // Soulbound token cannot be transferred
         revert SoulboundTokenCannotBeTransferred();
     }
 
-    function safeTransferFrom(address, address, uint256, bytes memory) public pure override{
+    function safeTransferFrom(address, address, uint256, bytes memory) public pure override {
         // Soulbound token cannot be transferred
         revert SoulboundTokenCannotBeTransferred();
     }
@@ -91,10 +90,16 @@ contract SoulboundProfileNFT is ERC721, Ownable {
                 Base64.encode(
                     bytes( // bytes casting actually unnecessary as 'abi.encodePacked()' returns a bytes
                         abi.encodePacked(
-                        '{"name":"', profileName, '", ',
-                        '"description":"A soulbound dating profile NFT.", ',
-                        '"attributes": [{"trait_type": "Age", "value": ', Strings.toString(profileAge), '}], ',
-                        '"image":"', imageURI, '"}'
+                            '{"name":"',
+                            profileName,
+                            '", ',
+                            '"description":"A soulbound dating profile NFT.", ',
+                            '"attributes": [{"trait_type": "Age", "value": ',
+                            Strings.toString(profileAge),
+                            "}], ",
+                            '"image":"',
+                            imageURI,
+                            '"}'
                         )
                     )
                 )

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "./SoulboundProfileNFT.sol"; 
+import "./SoulboundProfileNFT.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./MultiSig.sol";
 
-contract LikeRegistry is Ownable{
+contract LikeRegistry is Ownable {
     struct Like {
         address liker;
         address liked;
@@ -24,13 +24,11 @@ contract LikeRegistry is Ownable{
     event Liked(address indexed liker, address indexed liked);
     event Matched(address indexed user1, address indexed user2);
 
-    constructor(address _profileNFT) Ownable(msg.sender){
+    constructor(address _profileNFT) Ownable(msg.sender) {
         profileNFT = SoulboundProfileNFT(_profileNFT);
     }
 
-    function likeUser(
-        address liked
-    ) external payable {
+    function likeUser(address liked) external payable {
         require(msg.value >= 1 ether, "Must send at least 1 ETH");
         require(!likes[msg.sender][liked], "Already liked");
         require(msg.sender != liked, "Cannot like yourself");
@@ -56,7 +54,7 @@ contract LikeRegistry is Ownable{
         userBalances[to] = 0;
 
         uint256 totalRewards = matchUserOne + matchUserTwo;
-        uint256 matchingFees = (totalRewards * FIXEDFEE ) / 100;
+        uint256 matchingFees = (totalRewards * FIXEDFEE) / 100;
         uint256 rewards = totalRewards - matchingFees;
         totalFees += matchingFees;
 
@@ -64,7 +62,7 @@ contract LikeRegistry is Ownable{
         MultiSigWallet multiSigWallet = new MultiSigWallet(from, to);
 
         // Send ETH to the deployed multisig wallet
-        (bool success, ) = payable(address(multiSigWallet)).call{value: rewards}("");
+        (bool success,) = payable(address(multiSigWallet)).call{value: rewards}("");
         require(success, "Transfer failed");
     }
 
@@ -75,9 +73,9 @@ contract LikeRegistry is Ownable{
     function withdrawFees() external onlyOwner {
         require(totalFees > 0, "No fees to withdraw");
         uint256 totalFeesToWithdraw = totalFees;
-        
+
         totalFees = 0;
-        (bool success, ) = payable(owner()).call{value: totalFeesToWithdraw}("");
+        (bool success,) = payable(owner()).call{value: totalFeesToWithdraw}("");
         require(success, "Transfer failed");
     }
 
