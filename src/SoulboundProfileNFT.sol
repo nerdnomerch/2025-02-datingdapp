@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.19; //audit should be pegged to the latest version or specific version
 
+// audit should import specific modules instead of the entire library
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+
 
 contract SoulboundProfileNFT is ERC721, Ownable {
     error ERC721Metadata__URI_QueryFor_NonExistentToken();
@@ -28,8 +30,12 @@ contract SoulboundProfileNFT is ERC721, Ownable {
 
     /// @notice Mint a soulbound NFT representing the user's profile.
     function mintProfile(string memory name, uint8 age, string memory profileImage) external {
+        // audit where is this set and why to zero, returns zero when there is no mapping
         require(profileToToken[msg.sender] == 0, "Profile already exists");
 
+        // audit q can this be tampered with to get a favourable id?
+        // Is it a potential Failure to initialize
+        // this should not be manuall increment and instead use Counter contract that might save gas.
         uint256 tokenId = ++_nextTokenId;
         _safeMint(msg.sender, tokenId);
 
@@ -53,11 +59,12 @@ contract SoulboundProfileNFT is ERC721, Ownable {
         emit ProfileBurned(msg.sender, tokenId);
     }
 
-    /// @notice App owner can block users
+    /// @notice App owner can block users 
     function blockProfile(address blockAddress) external onlyOwner {
         uint256 tokenId = profileToToken[blockAddress];
         require(tokenId != 0, "No profile found");
 
+        //Audit q blocking deletes the profile is this an intended action
         _burn(tokenId);
         delete profileToToken[blockAddress];
         delete _profiles[tokenId];
@@ -66,12 +73,12 @@ contract SoulboundProfileNFT is ERC721, Ownable {
     }
 
     /// @notice Override of transferFrom to prevent any transfer.
-    function transferFrom(address, address, uint256) public pure override {
+    function transferFrom(address, address, uint256) public pure override{
         // Soulbound token cannot be transferred
         revert SoulboundTokenCannotBeTransferred();
     }
 
-    function safeTransferFrom(address, address, uint256, bytes memory) public pure override {
+    function safeTransferFrom(address, address, uint256, bytes memory) public pure override{
         // Soulbound token cannot be transferred
         revert SoulboundTokenCannotBeTransferred();
     }
@@ -90,16 +97,10 @@ contract SoulboundProfileNFT is ERC721, Ownable {
                 Base64.encode(
                     bytes( // bytes casting actually unnecessary as 'abi.encodePacked()' returns a bytes
                         abi.encodePacked(
-                            '{"name":"',
-                            profileName,
-                            '", ',
-                            '"description":"A soulbound dating profile NFT.", ',
-                            '"attributes": [{"trait_type": "Age", "value": ',
-                            Strings.toString(profileAge),
-                            "}], ",
-                            '"image":"',
-                            imageURI,
-                            '"}'
+                        '{"name":"', profileName, '", ',
+                        '"description":"A soulbound dating profile NFT.", ',
+                        '"attributes": [{"trait_type": "Age", "value": ', Strings.toString(profileAge), '}], ',
+                        '"image":"', imageURI, '"}'
                         )
                     )
                 )
