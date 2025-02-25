@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "./SoulboundProfileNFT.sol";
+import "./SoulboundProfileNFT.sol"; 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./MultiSig.sol";
 
-contract LikeRegistry is Ownable {
+contract LikeRegistry is Ownable{
     struct Like {
         address liker;
         address liked;
@@ -24,11 +24,13 @@ contract LikeRegistry is Ownable {
     event Liked(address indexed liker, address indexed liked);
     event Matched(address indexed user1, address indexed user2);
 
-    constructor(address _profileNFT) Ownable(msg.sender) {
+    constructor(address _profileNFT) Ownable(msg.sender){
         profileNFT = SoulboundProfileNFT(_profileNFT);
     }
 
-    function likeUser(address liked) external payable {
+    function likeUser(
+        address liked
+    ) external payable {
         require(msg.value >= 1 ether, "Must send at least 1 ETH");
         require(!likes[msg.sender][liked], "Already liked");
         require(msg.sender != liked, "Cannot like yourself");
@@ -36,6 +38,7 @@ contract LikeRegistry is Ownable {
         require(profileNFT.profileToToken(liked) != 0, "Liked user must have a profile NFT");
 
         likes[msg.sender][liked] = true;
+        // userBalances[msg.sender] += msg.value;
         emit Liked(msg.sender, liked);
 
         // Check if mutual like
@@ -48,34 +51,39 @@ contract LikeRegistry is Ownable {
     }
 
     function matchRewards(address from, address to) internal {
+        //audit q where are we tranfering the ETH to user balances
         uint256 matchUserOne = userBalances[from];
         uint256 matchUserTwo = userBalances[to];
         userBalances[from] = 0;
         userBalances[to] = 0;
 
         uint256 totalRewards = matchUserOne + matchUserTwo;
-        uint256 matchingFees = (totalRewards * FIXEDFEE) / 100;
+        uint256 matchingFees = (totalRewards * FIXEDFEE ) / 100;
         uint256 rewards = totalRewards - matchingFees;
         totalFees += matchingFees;
 
         // Deploy a MultiSig contract for the matched users
+        // Audit who will the users get address to this contract?
         MultiSigWallet multiSigWallet = new MultiSigWallet(from, to);
 
         // Send ETH to the deployed multisig wallet
-        (bool success,) = payable(address(multiSigWallet)).call{value: rewards}("");
+        // Audit this only works on contract address that can receive ETH
+        (bool success, ) = payable(address(multiSigWallet)).call{value: rewards}("");
         require(success, "Transfer failed");
+
     }
 
     function getMatches() external view returns (address[] memory) {
         return matches[msg.sender];
     }
 
+    // Audit the fees might be locked if the owner can't recieve eth.
     function withdrawFees() external onlyOwner {
         require(totalFees > 0, "No fees to withdraw");
         uint256 totalFeesToWithdraw = totalFees;
-
+        
         totalFees = 0;
-        (bool success,) = payable(owner()).call{value: totalFeesToWithdraw}("");
+        (bool success, ) = payable(owner()).call{value: totalFeesToWithdraw}(""); 
         require(success, "Transfer failed");
     }
 
