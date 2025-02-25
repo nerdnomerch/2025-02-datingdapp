@@ -23,6 +23,12 @@ contract SoulboundProfileNFTTest is Test {
 
         string memory uri = soulboundNFT.tokenURI(tokenId);
         assertTrue(bytes(uri).length > 0, "Token URI should be set");
+
+        vm.prank(user2); // Simulates user calling the function
+        soulboundNFT.mintProfile("Bob", 39, "ipfs://profileImage");
+
+        tokenId = soulboundNFT.profileToToken(user2);
+        assertEq(tokenId, 2, "Token ID should be 2");
     }
 
     function testMintDuplicateProfile() public {
@@ -32,6 +38,7 @@ contract SoulboundProfileNFTTest is Test {
         vm.prank(user);
         vm.expectRevert("Profile already exists");
         soulboundNFT.mintProfile("Alice", 25, "ipfs://profileImage");
+
     }
 
     function testTokenURI() public {
